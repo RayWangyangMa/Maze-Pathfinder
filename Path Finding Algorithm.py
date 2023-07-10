@@ -1,7 +1,7 @@
 import pygame
 from queue import PriorityQueue
 import random
-from A_Start import astar
+from A_Star import astar
 pygame.font.init()
 
 # Setting up the display
@@ -142,6 +142,7 @@ def generate_maze(grid, density=0.3):
             if random.random() < density:
                 node.make_barrier()
 
+
 def run_search(algorithm, width):
     ROWS = 50
     grid = make_grid(ROWS, width)
@@ -180,7 +181,8 @@ def run_search(algorithm, width):
 
                     if main_menu_button.is_over(pos):
                         print('Main Menu clicked')
-                        main(WIN, width)  # This would take the user back to the main function
+                        # This would take the user back to the main function
+                        main(WIN, width)
 
             # Draw buttons
             reset_button.draw(WIN, BLACK)
@@ -200,15 +202,16 @@ class Button:
     def draw(self, win, outline=None):
         if outline:
             pygame.draw.rect(win, outline, (self.x-2, self.y-2,
-                              self.width+4, self.height+4), 0)
+                                            self.width+4, self.height+4), 0)
         pygame.draw.rect(win, self.color, (self.x, self.y,
-                          self.width, self.height), 0)
+                                           self.width, self.height), 0)
 
         if self.text != '':
             font = pygame.font.SysFont('arial', 30)
             text = font.render(self.text, 1, (0, 0, 0))
             win.blit(text, (self.x + (self.width/2 - text.get_width()/2),
-                    self.y + (self.height/2 - text.get_height()/2)))
+                            self.y + (self.height/2 - text.get_height()/2)))
+
     def is_over(self, pos):
         # Pos is the mouse position or a tuple of (x,y) coordinates
         if self.x < pos[0] < self.x + self.width:
@@ -266,9 +269,5 @@ def main(win, width):
 
     pygame.quit()
 
-main(WIN, WIDTH)
-
-
 
 main(WIN, WIDTH)
-
