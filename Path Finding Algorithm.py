@@ -2,6 +2,9 @@ import pygame
 from queue import PriorityQueue
 import random
 from A_Star import astar
+from BFS import bfs
+from DFS import dfs
+from GBFS import gbfs
 pygame.font.init()
 
 # Setting up the display
@@ -34,6 +37,7 @@ class Node:
         self.neighbors = []
         self.width = width
         self.total_rows = total_rows
+        self.came_from = None
 
     def get_pos(self):
         return self.row, self.col
@@ -222,9 +226,10 @@ class Button:
 
 def main(win, width):
     # Create buttons
-    astar_button = Button(GREEN, 10, 10, 150, 50, text='A*')
-    bfs_button = Button(GREEN, 10, 70, 150, 50, text='BFS')
-    dfs_button = Button(GREEN, 10, 130, 150, 50, text='DFS')
+    bfs_button = Button(GREEN, 10, 10, 150, 50, text='BFS')
+    dfs_button = Button(GREEN, 10, 70, 150, 50, text='DFS')
+    gbfs_button = Button(GREEN, 10, 130, 150, 50, text='Greedy-BFS')
+    astar_button = Button(GREEN, 10, 190, 150, 50, text='A*')
 
     running = True
     while running:
@@ -235,35 +240,29 @@ def main(win, width):
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if astar_button.is_over(pos):
+
+                if bfs_button.is_over(pos):
+                    print('BFS selected')
+                    run_search(bfs, width)
+                elif dfs_button.is_over(pos):
+                    print('DFS selected')
+                    run_search(dfs, width)
+                elif dfs_button.is_over(pos):
+                    print('DFS selected')
+                    run_search(dfs, width)
+                elif gbfs_button.is_over(pos):
+                    print('Greedy-BFS selected')
+                    run_search(gbfs, width)
+                elif astar_button.is_over(pos):
                     print('A* selected')
                     run_search(astar, width)
-                # elif bfs_button.is_over(pos):
-                #     print('BFS selected')
-                #     run_search(bfs, width)
-                # elif dfs_button.is_over(pos):
-                #     print('DFS selected')
-                #     run_search(dfs, width)
-
-            if event.type == pygame.MOUSEMOTION:
-                if astar_button.is_over(pos):
-                    astar_button.color = RED
-                else:
-                    astar_button.color = GREEN
-                if bfs_button.is_over(pos):
-                    bfs_button.color = RED
-                else:
-                    bfs_button.color = GREEN
-                if dfs_button.is_over(pos):
-                    dfs_button.color = RED
-                else:
-                    dfs_button.color = GREEN
 
         # Redraw the window
         win.fill(WHITE)
-        astar_button.draw(win, BLACK)
         bfs_button.draw(win, BLACK)
         dfs_button.draw(win, BLACK)
+        gbfs_button.draw(win, BLACK)
+        astar_button.draw(win, BLACK)
 
         pygame.display.update()
 
