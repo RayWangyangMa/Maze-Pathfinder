@@ -5,6 +5,7 @@ from A_Star import astar
 from BFS import bfs
 from DFS import dfs
 from GBFS import gbfs
+from Dijkstra import dijkstra
 pygame.font.init()
 
 # Setting up the display
@@ -230,6 +231,7 @@ def main(win, width):
     dfs_button = Button(GREEN, 10, 70, 150, 50, text='DFS')
     gbfs_button = Button(GREEN, 10, 130, 150, 50, text='Greedy-BFS')
     astar_button = Button(GREEN, 10, 190, 150, 50, text='A*')
+    dijkstra_button = Button(GREEN, 10, 250, 150, 50, text='Dijkstra')
 
     running = True
     while running:
@@ -256,6 +258,9 @@ def main(win, width):
                 elif astar_button.is_over(pos):
                     print('A* selected')
                     run_search(astar, width)
+                elif dijkstra_button.is_over(pos):
+                    print('Dijkstra selected')
+                    run_search(dijkstra, width)
 
         # Redraw the window
         win.fill(WHITE)
@@ -263,6 +268,7 @@ def main(win, width):
         dfs_button.draw(win, BLACK)
         gbfs_button.draw(win, BLACK)
         astar_button.draw(win, BLACK)
+        dijkstra_button.draw(win, BLACK)
 
         pygame.display.update()
 
