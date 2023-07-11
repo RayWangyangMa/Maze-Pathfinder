@@ -12,7 +12,7 @@ pygame.font.init()
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("Path Finding Algorithm")
-
+win_width, win_height = pygame.display.get_surface().get_size()
 # Colors
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -140,6 +140,16 @@ def get_clicked_pos(pos, rows, width):
 
     return row, col
 
+class Text:
+    def __init__(self, text, x, y):
+        self.text = text
+        self.x = x
+        self.y = y
+
+    def draw(self, win):
+        font = pygame.font.SysFont('arial', 30)
+        text_surface = font.render(self.text, True, BLACK)
+        win.blit(text_surface, (self.x, self.y))
 
 def generate_maze_prim(grid, start):
     dx = [0, 1, 0, -1]
@@ -194,10 +204,11 @@ def run_search(algorithm, width):
     success = algorithm(lambda: draw(WIN, grid, ROWS, width), grid, start, end)
 
     if success:
-        reset_button = Button(RED, 650, 680, 150, 50, text='RESET')
-        main_menu_button = Button(BLUE, 650, 740, 150, 50, text='MAIN')
+        reset_button = Button(RED, YELLOW, 650, 680, 150, 50, text='RESET')
+        main_menu_button = Button(BLUE, YELLOW, 650, 740, 150, 50, text='MAIN')
 
-        while True:
+        running = True
+        while running:
             for event in pygame.event.get():
                 pos = pygame.mouse.get_pos()
                 if event.type == pygame.QUIT:
@@ -209,11 +220,13 @@ def run_search(algorithm, width):
                         print('RESET clicked')
                         # Here, instead of returning to the main, we can call run_search again with the same algorithm
                         run_search(algorithm, width)
+                        running = False
 
                     if main_menu_button.is_over(pos):
                         print('Main Menu clicked')
                         # This would take the user back to the main function
                         main(WIN, width)
+                        running = False
 
             # Draw buttons
             reset_button.draw(WIN, BLACK)
@@ -222,20 +235,25 @@ def run_search(algorithm, width):
 
 
 class Button:
-    def __init__(self, color, x, y, width, height, text=''):
+    def __init__(self, color, selected_color, x, y, width, height, text=''):
         self.color = color
+        self.selected_color = selected_color  # Add this line
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.text = text
+        self.selected = False  # Add this line
 
     def draw(self, win, outline=None):
         if outline:
             pygame.draw.rect(win, outline, (self.x-2, self.y-2,
                                             self.width+4, self.height+4), 0)
-        pygame.draw.rect(win, self.color, (self.x, self.y,
-                                           self.width, self.height), 0)
+
+        if self.selected:  # Add this if-else block
+            pygame.draw.rect(win, self.selected_color, (self.x, self.y, self.width, self.height), 0)
+        else:
+            pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
 
         if self.text != '':
             font = pygame.font.SysFont('arial', 30)
@@ -251,13 +269,28 @@ class Button:
         return False
 
 
+
 def main(win, width):
-    # Create buttons
-    bfs_button = Button(GREEN, 10, 10, 150, 50, text='BFS')
-    dfs_button = Button(GREEN, 10, 70, 150, 50, text='DFS')
-    gbfs_button = Button(GREEN, 10, 130, 150, 50, text='Greedy-BFS')
-    astar_button = Button(GREEN, 10, 190, 150, 50, text='A*')
-    dijkstra_button = Button(GREEN, 10, 250, 150, 50, text='Dijkstra')
+    # Create buttons with normal and selected colors
+    buttons = {
+        'bfs': Button(GREEN, YELLOW, win_width // 2 - 100, win_height // 2 - 180, 200, 60, text='BFS'),
+        'dfs': Button(GREEN, YELLOW, win_width // 2 - 100, win_height // 2 - 110, 200, 60, text='DFS'),
+        'gbfs': Button(GREEN, YELLOW, win_width // 2 - 100, win_height // 2 - 40, 200, 60, text='Greedy-BFS'),
+        'astar': Button(GREEN, YELLOW, win_width // 2 - 100, win_height // 2 + 30, 200, 60, text='A*'),
+        'dijkstra': Button(GREEN, YELLOW, win_width // 2 - 100, win_height // 2 + 100, 200, 60, text='Dijkstra'),
+    }
+    start_button = Button(ORANGE, YELLOW, win_width // 2 - 100, win_height // 2 + 170, 200, 60, text='Start')
+    
+    font = pygame.font.SysFont('arial', 30)
+    text_surface = font.render('Choose an algorithm, then press Start', True, BLACK)
+    text_width, text_height = text_surface.get_size()
+
+    instructions = Text('Choose an algorithm, then press Start',
+                        win_width // 2 - text_width // 2,
+                        win_height // 2 - 250)
+
+    selected_algorithm = None  # Variable to store the selected algorithm
+    selected_button = None  # Variable to store the selected button
 
     running = True
     while running:
@@ -269,36 +302,49 @@ def main(win, width):
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                if bfs_button.is_over(pos):
+                if buttons['bfs'].is_over(pos):
                     print('BFS selected')
-                    run_search(bfs, width)
-                elif dfs_button.is_over(pos):
+                    selected_algorithm = bfs
+                    selected_button = 'bfs'
+                elif buttons['dfs'].is_over(pos):
                     print('DFS selected')
-                    run_search(dfs, width)
-                elif dfs_button.is_over(pos):
-                    print('DFS selected')
-                    run_search(dfs, width)
-                elif gbfs_button.is_over(pos):
+                    selected_algorithm = dfs
+                    selected_button = 'dfs'
+                elif buttons['gbfs'].is_over(pos):
                     print('Greedy-BFS selected')
-                    run_search(gbfs, width)
-                elif astar_button.is_over(pos):
+                    selected_algorithm = gbfs
+                    selected_button = 'gbfs'
+                elif buttons['astar'].is_over(pos):
                     print('A* selected')
-                    run_search(astar, width)
-                elif dijkstra_button.is_over(pos):
+                    selected_algorithm = astar
+                    selected_button = 'astar'
+                elif buttons['dijkstra'].is_over(pos):
                     print('Dijkstra selected')
-                    run_search(dijkstra, width)
+                    selected_algorithm = dijkstra
+                    selected_button = 'dijkstra'
+                elif start_button.is_over(pos) and selected_algorithm is not None:
+                    print('Start button clicked')
+                    run_search(selected_algorithm, width)
+
+                # Reset all buttons to not selected
+                for button in buttons.values():
+                    button.selected = False
+                # Set the clicked button to selected
+                if selected_button:
+                    buttons[selected_button].selected = True
 
         # Redraw the window
         win.fill(WHITE)
-        bfs_button.draw(win, BLACK)
-        dfs_button.draw(win, BLACK)
-        gbfs_button.draw(win, BLACK)
-        astar_button.draw(win, BLACK)
-        dijkstra_button.draw(win, BLACK)
+        for button in buttons.values():
+            button.draw(win, BLACK)
+        start_button.draw(win, BLACK)
+        instructions.draw(win)
 
         pygame.display.update()
 
     pygame.quit()
+
+
 
 
 main(WIN, WIDTH)
