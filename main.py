@@ -22,80 +22,93 @@ def run_search(algorithm, width):
     ROWS = 50
     grid = make_grid(ROWS, width)
 
-    # Generate maze before user starts picking points
-    generate_maze_prim(grid, (ROWS//2, ROWS//2))
-    start = None
-    end = None
-    running = True
-    while running:
-        draw(WIN, grid, ROWS, width)
-        pygame.display.update()
+    def reset_maze():
+        nonlocal grid, start, end
+        grid = make_grid(ROWS, width)
+        generate_maze_prim(grid, (ROWS//2, ROWS//2))
+        start = None
+        end = None
+        draw(WIN, grid, ROWS, width)  # Redraw the maze
+        pygame.display.update()  # Update the display
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if pygame.mouse.get_pressed()[0]:  # Left mouse button
-                pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
-                node = grid[row][col]
-                if not start:
-                    start = node
-                    start.make_start()
-                elif not end and node != start:
-                    end = node
-                    end.make_end()
-                elif node != end and node != start:
-                    node.make_barrier()
-            elif pygame.mouse.get_pressed()[2]:  # Right mouse button
-                pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
-                node = grid[row][col]
-                node.reset()
-                if node == start:
-                    start = None
-                elif node == end:
-                    end = None
+    while True:  # Outer loop
+        reset_maze()
+        start = None
+        end = None
+        success = False
 
-        if start and end:
-            for row in grid:
-                for node in row:
-                    node.update_neighbors(grid)
-            success = algorithm(lambda: draw(
-                WIN, grid, ROWS, width), grid, start, end)
-            if success:
-                break  # Break the loop if algorithm finished successfully
+        # Maze and point selection loop
+        while not start or not end:
+            draw(WIN, grid, ROWS, width)
+            pygame.display.update()
 
-    # Create a surface for the buttons
-    button_surface = pygame.Surface((win_width, 200), pygame.SRCALPHA)  # Note the pygame.SRCALPHA flag
-    button_surface.fill((255, 255, 255, 0))  # Fill it with a transparent color
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+                if pygame.mouse.get_pressed()[0]:  # Left mouse button
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    node = grid[row][col]
+                    if not start:
+                        start = node
+                        start.make_start()
+                    elif not end and node != start:
+                        end = node
+                        end.make_end()
+                    elif node != end and node != start:
+                        node.make_barrier()
+                elif pygame.mouse.get_pressed()[2]:  # Right mouse button
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    node = grid[row][col]
+                    node.reset()
+                    if node == start:
+                        start = None
+                    elif node == end:
+                        end = None
 
-    # Draw the grid once before starting the loop
-    draw(WIN, grid, ROWS, width)
-    
-    # New loop to keep handling events
-    while success:
-        button_surface.fill((255, 255, 255, 0))  # Clear the button surface
-        reset_button.draw(button_surface)  # Draw the buttons on the button surface
-        main_menu_button.draw(button_surface)
-        WIN.blit(button_surface, (0, win_height - 200))  # Blit the button surface onto the main window
-        pygame.display.update()
+            if start and end:
+                for row in grid:
+                    for node in row:
+                        node.update_neighbors(grid)
+                success = algorithm(lambda: draw(
+                    WIN, grid, ROWS, width), grid, start, end)
+                if success:
+                    break  # Break the inner loop if algorithm finished successfully
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                success = False
-            if pygame.mouse.get_pressed()[0]:  # Left mouse button
-                pos = pygame.mouse.get_pos()
-                pos_adjusted = (pos[0], pos[1] - (win_height - 200))  # Adjust the mouse position
-                if reset_button.is_over(pos_adjusted):
-                    print("Reset button clicked")
-                    # Add code to reset the game here
-                    success = False  # Break the loop if reset button is clicked
-                elif main_menu_button.is_over(pos_adjusted):
-                    print("Main Menu button clicked")
-                    # Add code to go to the main menu here
-                    success = False  # Break the loop if main menu button is clicked
+        if success:  # If the search is successful, display the 'RESET' and 'MAIN' buttons
+            reset_button = Button(RED, YELLOW, win_width // 2 - 100,
+                                  (win_height // 2 + 240) - (win_height - 200), 200, 60, text='RESET')
+            main_menu_button = Button(BLUE, YELLOW, win_width // 2 - 100,
+                                      (win_height // 2 + 310) - (win_height - 200), 200, 60, text='MAIN')
+            while success:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                    if pygame.mouse.get_pressed()[0]:  # Left mouse button
+                        pos = pygame.mouse.get_pos()
+                        pos_adjusted = (pos[0], pos[1] - (win_height - 200))
+                        if reset_button.is_over(pos_adjusted):
+                            print("Reset button clicked")
+                            break  # Break this loop to restart the outer loop
+                        elif main_menu_button.is_over(pos_adjusted):
+                            print("Main Menu button clicked")
+                            return  # Return to main menu
 
-    return success  # Return the status
+                # Create a surface for the buttons
+                # Note the pygame.SRCALPHA flag
+                button_surface = pygame.Surface(
+                    (win_width, 200), pygame.SRCALPHA)
+                # Fill it with a transparent color
+                button_surface.fill((255, 255, 255, 0))
+
+                # Draw the buttons on the button surface
+                reset_button.draw(button_surface)
+                main_menu_button.draw(button_surface)
+
+                # Blit the button surface onto the main window
+                WIN.blit(button_surface, (0, win_height - 200))
+                pygame.display.update()
 
 
 def main(win, width):
@@ -140,16 +153,14 @@ def main(win, width):
                 pos = pygame.mouse.get_pos()
                 if start_button.is_over(pos) and selected_algorithm is not None and not algorithm_finished:
                     print("Start button clicked")
-                    # Update the status based on the return value of run_search
                     algorithm_finished = run_search(selected_algorithm, width)
                 elif reset_button.is_over(pos) and algorithm_finished:
                     print("Reset button clicked")
-                    # Add code to reset the game here
+                    run_search(selected_algorithm, width)
                     algorithm_finished = False  # Reset the status
                 elif main_menu_button.is_over(pos) and algorithm_finished:
                     print("Main Menu button clicked")
-                    # Add code to go to the main menu here
-                    algorithm_finished = False  # Reset the status
+                    running = False  # Stop the current loop
                 else:
                     # Check which algorithm button was clicked
                     if buttons['bfs'].is_over(pos):
