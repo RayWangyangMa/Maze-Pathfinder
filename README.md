@@ -2,6 +2,12 @@
 
 Welcome to Maze-Pathfinder, a fun and interactive Python application where you can experiment with various pathfinding algorithms to find your way through a maze!
 
+![Main](./img/main.png)
+Main Page
+
+![Game](./img/ingame.png)
+In-Game
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
